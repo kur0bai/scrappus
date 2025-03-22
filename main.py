@@ -1,6 +1,7 @@
 from colorama import Fore, Style
 import argparse
 import json
+import csv
 import time
 import requests
 from bs4 import BeautifulSoup
@@ -45,6 +46,16 @@ class Functions:
 
         return extracted_data
 
+    def save_data(self, data, output_format, output_file):
+        if output_format == 'json':
+            with open(output_file, 'w', encoding='utf8') as file:
+                json.dump(data, file, indent=4)
+        elif output_format == 'csv':
+            with open(output_file, 'w', newline="", encoding='utf8') as file:
+                writer = csv.writer(file)
+                writer.writerow(data.keys())
+                writer.writerows(data.values())
+
 
 def main():
     """
@@ -64,12 +75,18 @@ def main():
 
     functions = Functions()
 
-    with open(args.rules, 'r', encoding='utf8') as file:
-        rules = json.load(file)
-
-    content = functions.get_content(args.url, args.dynamic)
-    extracted_data = functions.parse_content(content, rules)
-    print('Content extracted')
+    try:
+        print(Fore.CYAN + 'Opening rules file...')
+        with open(args.rules, 'r', encoding='utf8') as file:
+            rules = json.load(file)
+        print(Fore.CYAN + 'Scrapping web data...')
+        content = functions.get_content(args.url, args.dynamic)
+        extracted_data = functions.parse_content(content, rules)
+        functions.save_data(extracted_data, args.format, args.output)
+        print(Fore.GREEN + f'Data saved in {args.output}.{args.format}')
+    except Exception as ex:
+        print(Fore.RED + f'Something went wrong, please try again: ${ex}')
+        Style.RESET_ALL
 
 
 def show_banner():
@@ -96,24 +113,3 @@ def show_banner():
 if __name__ == '__main__':
     show_banner()
     main()
-
-""" functions = functions.Functions()
-
-
-options = [
-    {"id": 1, "text": '1. Scrapp host'},
-    {"id": 2, "text": '2. Exit'},
-]
-
-exit = False
-
-while (exit is not True):
-    for option in options:
-        print(Fore.BLUE + option["text"])
-
-    try:
-        selected_option = int(input('Select option: '))
-        functions.validate_option(selected_option)
-    except Exception:
-        print(Fore.RED + 'Is not a valid option')
-        print('\n') """
