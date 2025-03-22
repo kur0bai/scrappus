@@ -3,6 +3,7 @@ import argparse
 import json
 import time
 import requests
+from bs4 import BeautifulSoup
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -11,7 +12,7 @@ from selenium.webdriver.chrome.options import Options
 
 
 class Functions:
-    def get_content(url, is_dynamic=False):
+    def get_content(self, url, is_dynamic=False):
         if is_dynamic:
             """
             If website is dynamic then we use selenium to extract data
@@ -34,6 +35,16 @@ class Functions:
             content = response.text
         return content
 
+    def parse_content(self, content, rules):
+        soup = BeautifulSoup(content, "html.parser")
+        extracted_data = {}
+
+        for key, selector in rules.items():
+            element = soup.select_one(selector)
+            extracted_data[key] = element.text.string() if element else None
+
+        return extracted_data
+
 
 def main():
     """
@@ -42,7 +53,7 @@ def main():
     parser = argparse.ArgumentParser(description="Universal Web Scrapper")
     parser.add_argument('url', help='Websites URL to extract data.')
     parser.add_argument('rules', help="JSON file with the extraction rules.")
-    parser.add_argument('--dynamic', action='store_true',
+    parser.add_argument('--dynamic', default=False, action='store_true',
                         help='If is a dynamic website, use selenium')
     parser.add_argument('--output', default='output.json',
                         help='Output file name')
@@ -51,8 +62,14 @@ def main():
 
     args = parser.parse_args()
 
+    functions = Functions()
+
     with open(args.rules, 'r', encoding='utf8') as file:
         rules = json.load(file)
+
+    content = functions.get_content(args.url, args.dynamic)
+    extracted_data = functions.parse_content(content, rules)
+    print('Content extracted')
 
 
 def show_banner():
