@@ -1,1 +1,6 @@
-{}
+{
+    "title": "h3",
+    "description": "meta[name='description']",
+    "skills": "div[class='mt-4']",
+    "links": "a[href]"
+}

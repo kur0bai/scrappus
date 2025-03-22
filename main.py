@@ -4,12 +4,61 @@ import json
 import csv
 import time
 import requests
+import threading
+import sys
 from bs4 import BeautifulSoup
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
+
+####################
+# UI FUNCTIONS #
+####################
+
+
+class Spinner:
+    """
+    Function to show and hide spinner animation
+    """
+
+    def __init__(self, message="Loading"):
+        self.spinner = ["⢿", "⣻", "⣽", "⣾", "⣷", "⣯", "⣟", "⡿"]
+        self.message = message
+        self.running = False
+        self.thread = None
+
+    def start(self):
+        if self.running:
+            return  # avoid multiple threading
+
+        self.running = True
+        self.thread = threading.Thread(target=self._animate, daemon=True)
+        self.thread.start()
+
+    def stop(self):
+        self.running = False
+        if self.thread:
+            self.thread.join()  # wait until ends
+
+        # clean
+        sys.stdout.write("\r" + " " * (len(self.message) + 4) + "\r")
+        sys.stdout.flush()
+
+    def _animate(self):
+        """execute spinner animation."""
+        while self.running:
+            for frame in self.spinner:
+                if not self.running:
+                    break
+                sys.stdout.write(f"\r{self.message} {frame} ")
+                sys.stdout.flush()
+                time.sleep(0.1)  # speed
+
+####################
+# MAIN FUNCTIONS #
+####################
 
 
 class Functions:
@@ -19,9 +68,9 @@ class Functions:
             If website is dynamic then we use selenium to extract data
             """
             options = Options()
-            options.add_argument('--headless')
+            options.add_argument("--headless")
             driver = webdriver.Chrome(service=Service(
-                ChromeDriverManager().install()))
+                ChromeDriverManager().install()), options=options)
             driver.get(url)
             time.sleep(3)
             content = driver.page_source
@@ -30,7 +79,7 @@ class Functions:
             """
             Using simple request for static websites
             """
-            headers = {'User-Agent': 'Mozilla/5.0'}
+            headers = {"User-Agent": "Mozilla/5.0"}
             response = requests.get(url, headers=headers)
             response.raise_for_status()
             content = response.text
@@ -41,14 +90,14 @@ class Functions:
         extracted_data = {}
 
         for key, selector in rules.items():
-            element = soup.select_one(selector)
-            extracted_data[key] = element.text.string() if element else None
-
+            elements = soup.select(selector)
+            extracted_data[key] = [element.text.strip()
+                                   for element in elements] if elements else None
         return extracted_data
 
     def save_data(self, data, output_format, output_file):
         if output_format == 'json':
-            with open(output_file, 'w', encoding='utf8') as file:
+            with open(output_file, "w", encoding="utf-8") as file:
                 json.dump(data, file, indent=4)
         elif output_format == 'csv':
             with open(output_file, 'w', newline="", encoding='utf8') as file:
@@ -76,16 +125,28 @@ def main():
     functions = Functions()
 
     try:
-        print(Fore.CYAN + 'Opening rules file...')
+        spinner = Spinner(Fore.CYAN + 'Reading rules file')
+        spinner.start()
+
         with open(args.rules, 'r', encoding='utf8') as file:
             rules = json.load(file)
-        print(Fore.CYAN + 'Scrapping web data...')
+
+        spinner.stop()
+
+        spinner = Spinner(Fore.CYAN + 'Scrapping Web data')
+        spinner.start()
+
         content = functions.get_content(args.url, args.dynamic)
+
+        spinner.stop()
+
         extracted_data = functions.parse_content(content, rules)
         functions.save_data(extracted_data, args.format, args.output)
-        print(Fore.GREEN + f'Data saved in {args.output}.{args.format}')
+        print(Fore.GREEN + 'Finished!!')
+        print(Fore.GREEN + f'Data saved in {args.output}')
     except Exception as ex:
-        print(Fore.RED + f'Something went wrong, please try again: ${ex}')
+        print(Fore.RED + f'\nSomething went wrong, please try again.',)
+        print(Fore.YELLOW + f'Error: ' + Fore.RED + f'{ex}')
         Style.RESET_ALL
 
 
@@ -94,15 +155,15 @@ def show_banner():
     Main identifier banner
     """
     banner = [
-        Fore.GREEN + " (                                           ",
-        Fore.GREEN + " )\ )                                         ",
-        Fore.GREEN + "(()/(     (       )                  (       ",
-        Fore.GREEN + " /(_)) (  )(   ( /(  `  )   `  )    ))\  (   ",
-        Fore.GREEN + "(_))   )\(()\  )(_)) /(/(   /(/(   /((_) )\  ",
-        Fore.GREEN + "/ __| ((_)((_)((_)_ ((_)_\ ((_)_\ (_))( ((_) ",
-        Fore.CYAN + "\__ \/ _|| '_|/ _` || '_ \)| '_ \)| || |(_-< ",
-        Fore.CYAN + "|___/\__||_|  \__,_|| .__/ | .__/  \_,_|/__/ ",
-        Fore.CYAN + "                    |_|    |_|               ",
+        Fore.GREEN + r" (                                           ",
+        Fore.GREEN + r" )\ )                                         ",
+        Fore.GREEN + r"(()/(     (       )                  (       ",
+        Fore.GREEN + r" /(_)) (  )(   ( /(  `  )   `  )    ))\  (   ",
+        Fore.GREEN + r"(_))   )\(()\  )(_)) /(/(   /(/(   /((_) )\  ",
+        Fore.GREEN + r"/ __| ((_)((_)((_)_ ((_)_\ ((_)_\ (_))( ((_) ",
+        Fore.CYAN + r"\__ \/ _|| '_|/ _` || '_ \)| '_ \)| || |(_-< ",
+        Fore.CYAN + r"|___/\__||_|  \__,_|| .__/ | .__/  \_,_|/__/ ",
+        Fore.CYAN + r"                    |_|    |_|               ",
         Style.RESET_ALL
     ]
 
