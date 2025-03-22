@@ -54,7 +54,7 @@ class Functions:
             with open(output_file, 'w', newline="", encoding='utf8') as file:
                 writer = csv.writer(file)
                 writer.writerow(data.keys())
-                writer.writerows(data.values())
+                writer.writerows(zip(*data.values()))
 
 
 def main():
