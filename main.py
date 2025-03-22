@@ -2,6 +2,7 @@ from colorama import Fore, Style
 import argparse
 import json
 import time
+import requests
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -24,7 +25,14 @@ class Functions:
             content = driver.page_source
             driver.quit()
         else:
-            pass
+            """
+            Using simple request for static websites
+            """
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            content = response.text
+        return content
 
 
 def main():
