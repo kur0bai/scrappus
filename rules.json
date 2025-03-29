@@ -1,0 +1,6 @@
+{
+    "title": "h3",
+    "description": "meta[name='description']",
+    "containers": "div[class='container']",
+    "links": "a[href]"
+}
