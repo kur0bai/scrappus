@@ -6,6 +6,7 @@ import time
 import requests
 import threading
 import sys
+import os
 from bs4 import BeautifulSoup
 
 from selenium import webdriver
@@ -62,6 +63,23 @@ class Spinner:
 
 
 class Functions:
+    def get_driver(self):
+        browser = os.getenv("BROWSER", "chrome").lower()
+
+        if browser == "firefox":
+            from selenium.webdriver.firefox.options import Options as FirefoxOptions
+            options = FirefoxOptions()
+            options.headless = True
+            return webdriver.Firefox(options=options)
+
+        options = Options()
+        options.add_argument('--headless')
+        options.add_argument('--disable-gpu')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+
+        return webdriver.Chrome(options=options)
+
     def get_content(self, url, is_dynamic=False):
         if is_dynamic:
             """
@@ -69,8 +87,7 @@ class Functions:
             """
             options = Options()
             options.add_argument("--headless")
-            driver = webdriver.Chrome(service=Service(
-                ChromeDriverManager().install()), options=options)
+            driver = self.get_driver()
             driver.get(url)
             time.sleep(3)
             content = driver.page_source
