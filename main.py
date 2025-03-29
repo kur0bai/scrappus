@@ -120,6 +120,10 @@ def main():
     parser.add_argument(
         '--format', choices=['json', 'csv'], default='json', help='Output file extension')
 
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(1)
+
     args = parser.parse_args()
 
     functions = Functions()
@@ -164,6 +168,8 @@ def show_banner():
         Fore.CYAN + r"\__ \/ _|| '_|/ _` || '_ \)| '_ \)| || |(_-< ",
         Fore.CYAN + r"|___/\__||_|  \__,_|| .__/ | .__/  \_,_|/__/ ",
         Fore.CYAN + r"                    |_|    |_|               ",
+        Fore.CYAN + r"",
+        Fore.CYAN + r"-------------- By: Kur0bai ------------------",
         Style.RESET_ALL
     ]
 
