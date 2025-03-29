@@ -127,7 +127,8 @@ def main():
     """
     Show the main features arguments to choice when we need to scrapp something
     """
-    parser = argparse.ArgumentParser(description="Universal Web Scrapper")
+    parser = argparse.ArgumentParser(
+        description="Scrappus: Flexible web scrapper")
     parser.add_argument('url', help='Websites URL to extract data.')
     parser.add_argument('rules', help="JSON file with the extraction rules.")
     parser.add_argument('--dynamic', default=False, action='store_true',
